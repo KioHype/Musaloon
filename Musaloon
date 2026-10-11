@@ -1,0 +1,98 @@
+# Musaloon
+
+**Faça batidas e melodias com a boca.** Cantarole uma melodia ou faça "bum", "tss", "ts" no microfone, e o Musaloon transforma isso em notas e golpes de bateria editáveis, encaixados no BPM do seu projeto, para você exportar em MIDI ou áudio e continuar no FL Studio (ou em qualquer DAW). O foco de estilo é **rock indie / emo / midwest emo**.
+
+| Bateria | Piano |
+|---|---|
+| ![Bateria](docs/tela-bateria.png) | ![Piano](docs/tela-piano.png) |
+
+*(Imagens geradas em testes com sons sintéticos.)*
+
+## O que ele faz
+
+- **Kicks e Bateria:** detecta cada golpe feito com a boca, descobre se é kick, caixa, chimbal ou chimbal aberto, e encaixa tudo na grade do BPM (corrigindo atraso e pequenas diferenças de velocidade). Você corrige qualquer golpe arrastando o quadradinho para a linha certa.
+- **Piano, Baixo, Violão e Guitarra (BETA):** transforma a melodia cantarolada em notas, com ajuda de tom, escala e acordes por compasso.
+- **4 opções para escolher:** em vez de um único resultado, gera versões A, B, C e D (por exemplo, "Indie solto", "Emo marcado", "Midwest sincopado" e "Refrão cheio" na bateria). Ctrl+Z volta ao que você fez.
+- **Ajudas de estilo** baseadas em padrões de bateria do indie e do emo: caixa no 2 e no 4, chimbal em colcheias ou semicolcheias, caixas fantasma, kick de pickup, virada com crash, rim no lugar do chimbal.
+- **Edição por trecho:** arraste no piano roll para escolher só uma parte e aplique adicionar notas, simplificar, melhorar, encaixar, repetir ou apagar.
+- **Galeria de sons própria:** coloque seus kicks, caixas e chimbais; para cada golpe da sua boca o programa escolhe o som mais parecido e ajusta a altura.
+- **Exporta** MIDI (bateria no canal de bateria) e WAV/MP3, já no BPM escolhido.
+- Funciona **offline**: as gravações não saem do seu computador.
+
+## Como usar (Windows, versão pronta)
+
+1. Baixe o `Musaloon-windows.zip` na página de **Releases** deste repositório e extraia a pasta inteira.
+2. Abra `Musaloon.exe` (se o Windows avisar "protegeu seu PC", clique em *Mais informações → Executar assim mesmo*: o programa não é assinado digitalmente).
+3. Escolha o instrumento, ajuste o **BPM do seu projeto** e aperte **GRAVAR**. Use fones se deixar o metrônomo ligado.
+4. Arraste no piano roll para escolher um trecho, use os botões de baixo e da direita, ou aperte **GERAR 4 OPÇÕES**.
+5. **EXPORTAR MIDI** ou **EXPORTAR ÁUDIO** e abra no FL Studio.
+
+Atalhos: `Espaço` toca/pausa, `Ctrl+Z` desfaz, `Esc` tira a seleção, `Delete` apaga o golpe ou nota selecionados.
+
+## Rodar pelo código-fonte
+
+Precisa do **Python 3.11** (o Basic Pitch ainda não suporta versões mais novas).
+
+```
+py -3.11 -m venv .venv
+.venv\Scripts\activate
+pip install basic-pitch --no-deps
+pip install -r requirements.txt
+python musaloon.py
+```
+
+(O `--no-deps` evita que o Basic Pitch instale o TensorFlow, que é pesado e desnecessário aqui: o programa usa o modelo ONNX.)
+Para conferir se tudo carrega sem abrir a janela: `python musaloon.py --autoteste`.
+
+## Gerar o .exe
+
+Dê dois cliques em `build_exe.bat` (ele cria o ambiente, instala tudo e roda o PyInstaller). O resultado fica em `dist\Musaloon\`. Use `dist\Musaloon\Musaloon.exe --autoteste` para conferir. Divulgue a **pasta inteira compactada**, não só o `.exe`.
+
+## Galeria de sons
+
+O programa cria a pasta `sons` ao lado dele:
+
+```
+sons/kicks/              kicks (modo Kicks)
+sons/bateria/kick/       (se estiver vazia, a bateria usa sons/kicks)
+sons/bateria/caixa/  hat/  hat_aberto/  rim/  crash/
+sons/instrumentos/       reservado para o modo "Som meu" (ainda não implementado)
+sons/_revisar/           arquivos que o programa não teve certeza do tipo
+```
+
+Pode usar o botão **IMPORTAR PASTA DE SONS...** com uma pasta bagunçada (inclusive com subpastas): o programa descobre o tipo de cada arquivo pelo **nome** (kick, snare, hihat, open, crash...) e, se o nome não ajudar, pelo **som**, e copia para o lugar certo. Na dúvida, manda para `_revisar`.
+Em testes com amostras reais de bateria (pelo som, sem usar o nome), kicks e chimbais foram identificados corretamente, caixas e sons de instrumento só em parte (o resto foi para a dúvida). Use sons livres de direitos e respeite as licenças dos packs que baixar. A pasta `sons` não é enviada ao GitHub (veja `.gitignore`).
+
+## Estado do projeto e limitações
+
+Este é um projeto experimental, encerrado na versão 0.5. Seja realista:
+
+- A **qualidade com voz real ainda não foi validada de forma ampla**. Os números abaixo vêm de testes automáticos com vozes e percussões **sintéticas** (que imitam vibrato, notas deslizando, respiração e ruído), não de gravações reais:
+  - detecção de notas: pontuação F1 de ~0,98 (a versão anterior marcava 0,91 e perdia notas quando se canta baixinho);
+  - encaixe no BPM: ~100% das posições rítmicas corretas mesmo cantando até 10% mais rápido ou devagar;
+  - detecção de golpes de bateria vocal: ~1,0 numa boca fazendo um som por vez.
+- Com sons reais da boca, o resultado pode variar. Por isso a edição manual, as opções A/B/C/D e o botão de sensibilidade existem.
+- O som de preview é sintético (simples). Os timbres realistas ainda dependem da sua galeria ou do instrumento virtual na DAW.
+- Guitarra é BETA; "Som meu" e a geração de acompanhamento sobre um áudio pronto não foram implementados.
+- Os sons de piano, baixo, violão e guitarra no preview são aproximações geradas por código.
+
+## Ideias que ficaram para o futuro
+
+- **Acompanhar uma música pronta:** importar um loop (guitarra + baixo, com ou sem voz) e gerar um piano por cima, com opções de clima (triste, animado...). Há um protótipo em `harmonia.py` que descobre tom e acorde por compasso: ~90% de acerto em áudios sintéticos sem voz, ~78% com voz. A detecção automática de BPM acertou só 60%, então o BPM teria de ser informado.
+- **Som meu:** usar qualquer áudio (até um som de mercado) como instrumento, mudando a altura conforme a melodia cantarolada.
+- Várias camadas ao mesmo tempo (bateria + baixo + piano), projeto salvo e takes.
+- Validar e ajustar tudo com gravações reais.
+
+## Como foi testado
+
+`dev/bancada.py` gera cantarolares e percussões vocais sintéticos com a resposta certa conhecida; foi com ele que cada mudança de algoritmo foi comparada antes de entrar no programa.
+
+## Créditos e pesquisa
+
+- Detecção de notas: [Basic Pitch](https://github.com/spotify/basic-pitch) (Spotify, Apache-2.0), via modelo ONNX.
+- Áudio e análise: librosa, NumPy, SciPy, scikit-learn, onnxruntime, soundfile, sounddevice, pretty_midi, mir_eval. Interface: PySide6 (Qt, LGPLv3). Empacotamento: PyInstaller. Cada biblioteca mantém a sua própria licença; confira-as antes de redistribuir.
+- Ideias de método: o software Tony (transcrição de melodia com pYIN e HMM), o dataset AVP de percussão vocal amadora, trabalhos de harmonização automática (um acorde por compasso com programação dinâmica) e guias de bateria de indie rock e midwest emo.
+
+## Licença
+
+Código do Musaloon sob licença MIT (veja `LICENSE`).
